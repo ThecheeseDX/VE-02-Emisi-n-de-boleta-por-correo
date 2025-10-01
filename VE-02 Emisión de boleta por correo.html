@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Emisión de Boleta por Correo</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+        body {
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 20px;
+        }
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+        }
+        h1 {
+            color: #2c3e50;
+            margin: 0;
+        }
+        .status-container {
+            display: flex;
+            justify-content: center;
+            margin: 20px 0;
+        }
+        .status-step {
+            text-align: center;
+            margin: 0 20px;
+            position: relative;
+        }
+        .status-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 10px;
+            font-size: 24px;
+            font-weight: bold;
+        }
+        .status-icon.pending {
+            background-color: #f8f9fa;
+            border: 2px solid #dee2e6;
+            color: #6c757d;
+        }
+        .status-icon.active {
+            background-color: #3498db;
+            color: white;
+        }
+        .status-icon.completed {
+            background-color: #2ecc71;
+            color: white;
+        }
+        .status-icon.error {
+            background-color: #e74c3c;
+            color: white;
+        }
+        .status-label {
+            font-size: 14px;
+            color: #6c757d;
+            font-weight: bold;
+        }
+        .receipt-container {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            background: #f8f9fa;
+        }
+        .receipt-header {
+            text-align: center;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 10px;
+        }
+        .receipt-details {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .receipt-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 5px 0;
+        }
+        .receipt-label {
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        .receipt-value {
+            color: #34495e;
+        }
+        .receipt-items {
+            margin: 20px 0;
+        }
+        .receipt-item-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .receipt-total {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-top: 2px solid #ddd;
+            font-weight: bold;
+            font-size: 18px;
+            margin-top: 10px;
+        }
+        .email-section {
+            background: #e8f4fd;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        .email-info {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .email-icon {
+            font-size: 24px;
+            margin-right: 10px;
+            color: #3498db;
+        }
+        .notification {
+            padding: 15px;
+            border-radius: 4px;
+            margin: 15px 0;
+            display: none;
+        }
+        .notification-success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .notification-error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+        }
+        .btn-primary {
+            background-color: #3498db;
+            color: white;
+        }
+        .btn-primary:hover {
+            background-color: #2980b9;
+        }
+        .btn-secondary {
+            background-color: #95a5a6;
+            color: white;
+        }
+        .btn-secondary:hover {
+            background-color: #7f8c8d;
+        }
+        .btn-success {
+            background-color: #2ecc71;
+            color: white;
+        }
+        .btn-success:hover {
+            background-color: #27ae60;
+        }
+        .btn-danger {
+            background-color: #e74c3c;
+            color: white;
+        }
+        .btn-danger:hover {
+            background-color: #c0392b;
+        }
+        .action-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .simulation-section {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #34495e;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        .email-options {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .email-option {
+            flex: 1;
+            text-align: center;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            cursor: pointer;
+            background: white;
+        }
+        .email-option.selected {
+            border-color: #3498db;
+            background-color: #e8f4fd;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Estado: Proceso de Compra -->
+        <div id="compra-container">
+            <header>
+                <h1>Confirmación de Compra</h1>
+                <p>Su pedido ha sido procesado exitosamente</p>
+            </header>
+            
+            <!-- Progreso del Estado -->
+            <div class="status-container">
+                <div class="status-step">
+                    <div class="status-icon completed">✓</div>
+                    <div class="status-label">Compra</div>
+                </div>
+                <div class="status-step">
+                    <div class="status-icon active">2</div>
+                    <div class="status-label">Envío de Boleta</div>
+                </div>
+                <div class="status-step">
+                    <div class="status-icon pending">3</div>
+                    <div class="status-label">Confirmación</div>
+                </div>
+            </div>
+            
+            <!-- Detalles de la Boleta -->
+            <div class="receipt-container">
+                <div class="receipt-header">
+                    <h2>Boleta Electrónica</h2>
+                    <p>N° <span id="boleta-numero">2025-001</span></p>
+                </div>
+                
+                <div class="receipt-details">
+                    <div class="receipt-item">
+                        <span class="receipt-label">Fecha:</span>
+                        <span class="receipt-value" id="boleta-fecha">15/03/2024 14:30</span>
+                    </div>
+                    <div class="receipt-item">
+                        <span class="receipt-label">Cliente:</span>
+                        <span class="receipt-value" id="boleta-cliente">Ana López</span>
+                    </div>
+                    <div class="receipt-item">
+                        <span class="receipt-label">RUT:</span>
+                        <span class="receipt-value">12.345.678-9</span>
+                    </div>
+                    <div class="receipt-item">
+                        <span class="receipt-label">Email:</span>
+                        <span class="receipt-value" id="boleta-email">cliente@example.com</span>
+                    </div>
+                </div>
+                
+                <div class="receipt-items">
+                    <div class="receipt-item-row">
+                        <span>Hamburguesa Vegana Especial</span>
+                        <span>$12.500</span>
+                    </div>
+                    <div class="receipt-item-row">
+                        <span>Papas Fritas Grandes</span>
+                        <span>$4.500</span>
+                    </div>
+                    <div class="receipt-item-row">
+                        <span>Bebida 500ml</span>
+                        <span>$2.500</span>
+                    </div>
+                    <div class="receipt-item-row">
+                        <span>Envío a domicilio</span>
+                        <span>$2.000</span>
+                    </div>
+                </div>
+                
+                <div class="receipt-total">
+                    <span>TOTAL:</span>
+                    <span>$21.500</span>
+                </div>
+            </div>
+            
+            <!-- Sección de Email -->
+            <div class="email-section">
+                <div class="email-info">
+                    <div class="email-icon">✉</div>
+                    <div>
+                        <h3>Boleta enviada por correo electrónico</h3>
+                        <p>Hemos enviado una copia de su boleta a: <strong id="email-destino">cliente@example.com</strong></p>
+                    </div>
+                </div>
+                
+                <div id="email-notification" class="notification">
+                    <!-- Mensaje de éxito o error se mostrará aquí -->
+                </div>
+                
+                <div class="action-buttons">
+                    <button id="btn-reenviar" class="btn btn-primary">Reenviar Boleta</button>
+                    <button id="btn-descargar" class="btn btn-secondary">Descargar PDF</button>
+                    <button id="btn-finalizar" class="btn btn-success">Finalizar</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Simulación de Envío de Email -->
+        <div class="simulation-section">
+            <h3>Simulación de Envío de Boleta</h3>
+            <p>Esta sección permite simular diferentes escenarios de envío de boleta por correo.</p>
+            
+            <div class="form-group">
+                <label for="simulacion-email">Correo Electrónico:</label>
+                <input type="email" id="simulacion-email" value="cliente@example.com">
+            </div>
+            
+            <div class="email-options">
+                <div class="email-option" id="option-success">
+                    <h4>Correo Válido</h4>
+                    <p>cliente@example.com</p>
+                    <small>Envío exitoso</small>
+                </div>
+                <div class="email-option" id="option-error">
+                    <h4>Correo Inválido</h4>
+                    <p>correo@invalido.xyz</p>
+                    <small>Error en envío</small>
+                </div>
+            </div>
+            
+            <div class="action-buttons">
+                <button id="btn-simular" class="btn btn-primary">Simular Envío</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Elementos del DOM
+        const emailDestino = document.getElementById('email-destino');
+        const boletaEmail = document.getElementById('boleta-email');
+        const emailNotification = document.getElementById('email-notification');
+        const btnReenviar = document.getElementById('btn-reenviar');
+        const btnDescargar = document.getElementById('btn-descargar');
+        const btnFinalizar = document.getElementById('btn-finalizar');
+        const simulacionEmail = document.getElementById('simulacion-email');
+        const optionSuccess = document.getElementById('option-success');
+        const optionError = document.getElementById('option-error');
+        const btnSimular = document.getElementById('btn-simular');
+
+        // Estado inicial
+        let emailValido = true;
+        let emailEnviado = false;
+
+        // Función para simular envío de email
+        function simularEnvioEmail(email) {
+            return new Promise((resolve, reject) => {
+                // Simulamos una llamada a API con timeout
+                setTimeout(() => {
+                    // Simulación: correos válidos e inválidos
+                    const dominiosValidos = ['gmail.com', 'hotmail.com', 'yahoo.com', 'example.com', 'outlook.com'];
+                    const dominio = email.split('@')[1];
+                    
+                    if (dominiosValidos.includes(dominio) && email !== 'correo@invalido.xyz') {
+                        resolve({ 
+                            exito: true, 
+                            mensaje: `Boleta enviada correctamente a ${email}` 
+                        });
+                    } else {
+                        reject({ 
+                            exito: false, 
+                            mensaje: 'Error: No se pudo enviar la boleta. Correo electrónico inválido.' 
+                        });
+                    }
+                }, 2000);
+            });
+        }
+
+        // Función para actualizar la interfaz según el estado del envío
+        function actualizarEstadoEnvio(exito, mensaje) {
+            emailNotification.className = exito ? 
+                'notification notification-success' : 
+                'notification notification-error';
+            emailNotification.textContent = mensaje;
+            emailNotification.style.display = 'block';
+            
+            // Actualizar iconos de estado
+            const statusIcon = document.querySelector('.status-step:nth-child(2) .status-icon');
+            if (exito) {
+                statusIcon.className = 'status-icon completed';
+                statusIcon.textContent = '✓';
+                emailEnviado = true;
+            } else {
+                statusIcon.className = 'status-icon error';
+                statusIcon.textContent = '✗';
+                emailEnviado = false;
+            }
+            
+            // Actualizar siguiente paso si es exitoso
+            if (exito) {
+                const nextStatusIcon = document.querySelector('.status-step:nth-child(3) .status-icon');
+                nextStatusIcon.className = 'status-icon active';
+                nextStatusIcon.textContent = '3';
+            }
+        }
+
+        // Reenviar boleta
+        btnReenviar.addEventListener('click', async function() {
+            const email = boletaEmail.textContent;
+            
+            // Mostrar estado de envío
+            emailNotification.className = 'notification';
+            emailNotification.textContent = 'Enviando boleta...';
+            emailNotification.style.display = 'block';
+            
+            btnReenviar.disabled = true;
+            btnReenviar.textContent = 'Enviando...';
+            
+            try {
+                const resultado = await simularEnvioEmail(email);
+                actualizarEstadoEnvio(resultado.exito, resultado.mensaje);
+            } catch (error) {
+                actualizarEstadoEnvio(error.exito, error.mensaje);
+            } finally {
+                btnReenviar.disabled = false;
+                btnReenviar.textContent = 'Reenviar Boleta';
+            }
+        });
+
+        // Descargar PDF (simulación)
+        btnDescargar.addEventListener('click', function() {
+            alert('Descargando boleta en formato PDF...');
+            // En una aplicación real, aquí se descargaría el archivo PDF
+        });
+
+        // Finalizar proceso
+        btnFinalizar.addEventListener('click', function() {
+            if (emailEnviado) {
+                alert('¡Gracias por su compra! Puede revisar su boleta en su correo electrónico.');
+            } else {
+                alert('¡Gracias por su compra! Recuerde que puede descargar su boleta en cualquier momento.');
+            }
+        });
+
+        // Selección de opciones de simulación
+        optionSuccess.addEventListener('click', function() {
+            optionSuccess.classList.add('selected');
+            optionError.classList.remove('selected');
+            simulacionEmail.value = 'cliente@example.com';
+            emailValido = true;
+        });
+
+        optionError.addEventListener('click', function() {
+            optionError.classList.add('selected');
+            optionSuccess.classList.remove('selected');
+            simulacionEmail.value = 'correo@invalido.xyz';
+            emailValido = false;
+        });
+
+        // Simular envío con diferentes escenarios
+        btnSimular.addEventListener('click', async function() {
+            const email = simulacionEmail.value;
+            
+            // Actualizar email en la boleta
+            emailDestino.textContent = email;
+            boletaEmail.textContent = email;
+            
+            // Mostrar estado de envío
+            emailNotification.className = 'notification';
+            emailNotification.textContent = 'Enviando boleta...';
+            emailNotification.style.display = 'block';
+            
+            btnSimular.disabled = true;
+            btnSimular.textContent = 'Enviando...';
+            
+            try {
+                const resultado = await simularEnvioEmail(email);
+                actualizarEstadoEnvio(resultado.exito, resultado.mensaje);
+            } catch (error) {
+                actualizarEstadoEnvio(error.exito, error.mensaje);
+            } finally {
+                btnSimular.disabled = false;
+                btnSimular.textContent = 'Simular Envío';
+            }
+        });
+
+        // Inicializar la aplicación
+        document.addEventListener('DOMContentLoaded', function() {
+            // Seleccionar opción por defecto
+            optionSuccess.classList.add('selected');
+            
+            // Simular envío inicial exitoso
+            setTimeout(() => {
+                actualizarEstadoEnvio(
+                    true, 
+                    'Boleta enviada correctamente a cliente@example.com'
+                );
+            }, 1000);
+        });
+    </script>
+</body>
+</html>
